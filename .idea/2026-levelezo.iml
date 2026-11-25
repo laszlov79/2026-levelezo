@@ -3,6 +3,7 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/Projektfeladat/.venv" />
     </content>
     <orderEntry type="jdk" jdkName="D:\_UNIDUNA_\05 - SZKRIPT NYELVEK\GITHUB\.venv" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
