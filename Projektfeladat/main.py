@@ -8,10 +8,10 @@ from vl_parkolohaz import (VLParkolohaz, vl_veletlen_auto, vl_erkezesi_esely,
 
 OSZLOPOK = 5
 SOROK = 4
-HELY_SZ = 120       # egy parkolóhely szélessége (px)
-HELY_M = 80         # egy parkolóhely magassága (px)
+HELY_SZ = 120
+HELY_M = 80
 MARGO = 20
-SAV = 40            # az úttest a két sor között
+SAV = 40
 
 
 class ParkolohazApp:
@@ -30,9 +30,6 @@ class ParkolohazApp:
         self._esemenyek_kotese()
         self.rajzol()
 
-    # ------------------------------------------------------------
-    # Felület
-    # ------------------------------------------------------------
     def _felulet_felepitese(self):
         szel = MARGO * 2 + OSZLOPOK * HELY_SZ
         mag = MARGO * 2 + SOROK * HELY_M + (SOROK // 2) * SAV + 30
@@ -92,9 +89,6 @@ class ParkolohazApp:
         self.ablak.bind("<KeyPress-s>", lambda e: self.statisztika())
         self.dij_mezo.bind("<Return>", lambda e: self.oradij_beallitas())
 
-    # ------------------------------------------------------------
-    # Rajzolás
-    # ------------------------------------------------------------
     def hely_koordinata(self, index):
         sor, oszlop = divmod(index, OSZLOPOK)
         x = MARGO + oszlop * HELY_SZ
@@ -102,7 +96,6 @@ class ParkolohazApp:
         return x, y
 
     def hely_index(self, x, y):
-        """Melyik parkolóhelyre esik a kattintás (vagy None)."""
         for i in range(len(self.haz.helyek)):
             hx, hy = self.hely_koordinata(i)
             if hx <= x <= hx + HELY_SZ and hy <= y <= hy + HELY_M:
@@ -115,7 +108,6 @@ class ParkolohazApp:
 
         for i, auto in enumerate(self.haz.helyek):
             x, y = self.hely_koordinata(i)
-            # felfestés
             v.create_rectangle(x, y, x + HELY_SZ, y + HELY_M,
                                outline="white", width=2)
             v.create_text(x + 10, y + 10, text=str(i + 1),
@@ -123,7 +115,6 @@ class ParkolohazApp:
             if auto is not None:
                 self.auto_rajzolasa(x, y, auto)
 
-        # foglaltsági sáv alul
         szel = int(v["width"])
         mag = int(v["height"])
         arany = self.haz.foglalt_db() / len(self.haz.helyek)
@@ -152,17 +143,14 @@ class ParkolohazApp:
         x2, y2 = x + HELY_SZ - 15, y + HELY_M - 12
         v.create_rectangle(x1, y1, x2, y2, fill=auto.szin, outline="black")
         v.create_rectangle(x1 + 15, y1 + 6, x2 - 15, y2 - 22,
-                           fill="#cfe8ff", outline="")       # szélvédő
+                           fill="#cfe8ff", outline="")
         v.create_rectangle(x1 + 10, y2 - 15, x2 - 10, y2 - 3,
-                           fill="white", outline="black")    # rendszámtábla
+                           fill="white", outline="black")
         v.create_text((x1 + x2) / 2, y2 - 9, text=auto.rendszam,
                       font=("Arial", 7, "bold"))
         if auto.tipus == "Elektromos":
             v.create_text(x2 - 6, y1 + 7, text="⚡", font=("Arial", 9))
 
-    # ------------------------------------------------------------
-    # Szimuláció
-    # ------------------------------------------------------------
     def inditas_szunet(self):
         self.fut = not self.fut
         self.inditas_gomb.config(text="⏸ Szünet" if self.fut else "▶ Indítás")
@@ -175,12 +163,10 @@ class ParkolohazApp:
     def lepes(self):
         self.ido += LEPES
 
-        # távozók
         for i, auto in enumerate(self.haz.helyek):
             if auto is not None and auto.tavozik_e(self.ido):
                 self.kienged(i)
 
-        # érkezők
         if random.random() < vl_erkezesi_esely(self.ido.hour):
             auto = vl_veletlen_auto(self.ido)
             hely = self.haz.beenged(auto)
@@ -189,7 +175,6 @@ class ParkolohazApp:
             else:
                 self.esemeny(f"→ {auto} beállt a {hely + 1}. helyre")
 
-        # új nap: a napi bevétel nullázódik
         if self.ido.hour == 0 and self.ido.minute == 0:
             self.mai_bevetel = 0
             self.esemeny("🌙 Új nap kezdődött")
@@ -214,9 +199,6 @@ class ParkolohazApp:
         if self.naplo.size() > 100:
             self.naplo.delete(100, tk.END)
 
-    # ------------------------------------------------------------
-    # Eseménykezelők
-    # ------------------------------------------------------------
     def kattintas(self, esemeny):
         hely = self.hely_index(esemeny.x, esemeny.y)
         if hely is None or self.haz.helyek[hely] is None:

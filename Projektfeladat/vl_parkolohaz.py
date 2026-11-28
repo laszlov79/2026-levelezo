@@ -5,20 +5,15 @@ import csv
 import statistics
 from datetime import datetime, timedelta
 
-ORADIJ = 400            # Ft / megkezdett óra
-INGYENES_PERC = 15      # az első 15 perc ingyenes
-TOLTESI_DIJ = 250       # Ft / megkezdett óra (csak elektromos autónál)
+ORADIJ = 400
+INGYENES_PERC = 15
+TOLTESI_DIJ = 250
 
 AUTO_SZINEK = ["#e74c3c", "#3498db", "#f1c40f", "#9b59b6",
                "#1abc9c", "#e67e22", "#95a5a6", "#2c3e50"]
 
 
 def vl_parkolasi_dij(perc, oradij=ORADIJ):
-    """Kiszámolja a parkolási díjat percek alapján.
-
-    Az első INGYENES_PERC perc ingyenes, utána minden
-    megkezdett óra 'oradij' forintba kerül.
-    """
     if perc < 0:
         raise ValueError("A parkolási idő nem lehet negatív!")
     if perc <= INGYENES_PERC:
@@ -27,7 +22,6 @@ def vl_parkolasi_dij(perc, oradij=ORADIJ):
 
 
 def vl_rendszam_generalas():
-    """Véletlen magyar rendszámot ad vissza, pl. 'AA BC-123'."""
     betuk = "ABCDEFGHIJKLMNOPRSTUVZ"
     eleje = "A" + random.choice(betuk)
     kozepe = random.choice(betuk) + random.choice(betuk)
@@ -36,18 +30,15 @@ def vl_rendszam_generalas():
 
 
 class VLAuto:
-    """Egy parkoló autó adatai."""
-
     tipus = "Benzines"
 
     def __init__(self, rendszam, erkezes, tervezett_perc):
         self.rendszam = rendszam
-        self.erkezes = erkezes                  # datetime objektum
-        self.tervezett_perc = tervezett_perc    # ennyi ideig marad
+        self.erkezes = erkezes
+        self.tervezett_perc = tervezett_perc
         self.szin = random.choice(AUTO_SZINEK)
 
     def eltelt_perc(self, most):
-        """Hány perce parkol az autó (datetime különbségből)."""
         return int((most - self.erkezes).total_seconds() // 60)
 
     def tavozik_e(self, most):
@@ -61,24 +52,19 @@ class VLAuto:
 
 
 class VLElektromosAuto(VLAuto):
-    """Elektromos autó: a parkolási díjon felül töltési díjat is fizet."""
-
     tipus = "Elektromos"
 
     def __init__(self, rendszam, erkezes, tervezett_perc):
         super().__init__(rendszam, erkezes, tervezett_perc)
-        self.szin = "#2ecc71"   # zöld, hogy messziről látszódjon
+        self.szin = "#2ecc71"
 
     def dij(self, perc, oradij=ORADIJ):
-        # A szülő metódusát felülírjuk (többalakúság)
         alap = super().dij(perc, oradij)
         toltes = math.ceil(perc / 60) * TOLTESI_DIJ
         return alap + toltes
 
 
 class VLParkolohaz:
-    """A parkolóház: helyek kezelése, adatbázis, statisztika."""
-
     def __init__(self, helyek_szama=20, db_fajl="parkolohaz.db"):
         self.helyek = [None] * helyek_szama
         self.db_fajl = db_fajl
@@ -86,7 +72,6 @@ class VLParkolohaz:
         self.oradij = ORADIJ
         self._adatbazis_letrehozasa()
 
-    # ---------- adatbázis ----------
     def _adatbazis_letrehozasa(self):
         with sqlite3.connect(self.db_fajl) as kapcsolat:
             kapcsolat.execute("""
@@ -131,7 +116,6 @@ class VLParkolohaz:
             iro.writerows(sorok)
         return len(sorok)
 
-    # ---------- helyek kezelése ----------
     def szabad_helyek(self):
         return [i for i, a in enumerate(self.helyek) if a is None]
 
@@ -139,7 +123,6 @@ class VLParkolohaz:
         return len(self.helyek) - len(self.szabad_helyek())
 
     def beenged(self, auto):
-        """Véletlen szabad helyre teszi az autót. Ha tele van, None."""
         szabad = self.szabad_helyek()
         if not szabad:
             self.elutasitott += 1
@@ -149,7 +132,6 @@ class VLParkolohaz:
         return hely
 
     def kienged(self, hely, most):
-        """Kiengedi az autót, kiszámolja a díjat és elmenti."""
         auto = self.helyek[hely]
         if auto is None:
             raise ValueError("Ezen a helyen nem áll autó!")
@@ -159,7 +141,6 @@ class VLParkolohaz:
         self.helyek[hely] = None
         return auto, perc, dij
 
-    # ---------- statisztika (statistics modul bemutatása) ----------
     def statisztika(self):
         sorok = self.osszes_parkolas()
         if not sorok:
@@ -181,7 +162,6 @@ class VLParkolohaz:
 
 
 def vl_veletlen_auto(most):
-    """Véletlen autót készít: 20% eséllyel elektromosat."""
     rendszam = vl_rendszam_generalas()
     tervezett = random.choice([10, 30, 45, 60, 90, 120, 180, 240, 480])
     if random.random() < 0.2:
@@ -190,7 +170,6 @@ def vl_veletlen_auto(most):
 
 
 def vl_erkezesi_esely(ora):
-    """Napszaktól függő érkezési esély (reggeli és délutáni csúcs)."""
     if 7 <= ora <= 9 or 16 <= ora <= 18:
         return 0.7
     if 10 <= ora <= 15:
@@ -201,9 +180,8 @@ def vl_erkezesi_esely(ora):
 
 
 def kezdo_ido():
-    """A szimuláció mai nap reggel 6:00-kor indul."""
     ma = datetime.now().replace(hour=6, minute=0, second=0, microsecond=0)
     return ma
 
 
-LEPES = timedelta(minutes=5)    # egy szimulációs lépés = 5 perc
+LEPES = timedelta(minutes=5)
